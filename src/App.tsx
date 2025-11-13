@@ -11,6 +11,7 @@ import Courses from "./pages/Courses";
 import CodeEditor from "./pages/CodeEditor";
 import Problems from "./pages/Problems";
 import Leaderboard from "./pages/Leaderboard";
+import RewardsShop from "./pages/RewardsShop";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/problems" element={<Problems />} />
           <Route path="/code-editor/:id?" element={<CodeEditor />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/rewards" element={<RewardsShop />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

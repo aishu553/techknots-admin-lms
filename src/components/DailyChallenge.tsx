@@ -10,7 +10,8 @@ import {
   Calendar, 
   Timer,
   Zap,
-  CheckCircle2
+  CheckCircle2,
+  Gift
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -174,6 +175,11 @@ const DailyChallenge = ({ currentStreak = 7, completed = false }: DailyChallenge
               <Share2 className="h-5 w-5" />
               Share
             </Button>
+            <Link to="/rewards">
+              <Button variant="secondary" size="lg">
+                <Gift className="h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </div>
 
