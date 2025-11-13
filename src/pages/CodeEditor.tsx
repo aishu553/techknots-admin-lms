@@ -68,7 +68,7 @@ public:
     setCode(getStarterCode(newLang));
   };
 
-  const handleRunCode = () => {
+  const handleRunCode = async () => {
     setIsRunning(true);
     
     toast({
@@ -76,20 +76,67 @@ public:
       description: "Executing your code against test cases",
     });
 
-    // Simulate test execution
-    setTimeout(() => {
-      setTestResults([
-        { input: "[2,7,11,15], target = 9", expected: "[0,1]", actual: "[0,1]", passed: true },
-        { input: "[3,2,4], target = 6", expected: "[1,2]", actual: "[1,2]", passed: true },
-        { input: "[3,3], target = 6", expected: "[0,1]", actual: "[0,1]", passed: true },
-      ]);
-      setIsRunning(false);
+    try {
+      // Test cases for the current problem
+      const testCases = [
+        { input: "[2,7,11,15], 9", expected: "[0,1]" },
+        { input: "[3,2,4], 6", expected: "[1,2]" },
+        { input: "[3,3], 6", expected: "[0,1]" },
+      ];
+
+      const results = [];
+
+      for (let i = 0; i < testCases.length; i++) {
+        const testCase = testCases[i];
+        
+        // Execute code using Piston API (free, no auth required)
+        const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            language: languageMap[language],
+            version: '*',
+            files: [{
+              name: `solution.${language === 'cpp' ? 'cpp' : language === 'python' ? 'py' : language === 'java' ? 'java' : 'js'}`,
+              content: code
+            }],
+            stdin: testCase.input
+          })
+        });
+
+        const result = await response.json();
+        const output = result.run?.output?.trim() || '';
+        const passed = output === testCase.expected;
+
+        results.push({
+          input: testCase.input,
+          expected: testCase.expected,
+          actual: output || 'No output',
+          passed,
+          error: result.run?.stderr || null
+        });
+      }
       
+      setTestResults(results);
+      
+      const passedCount = results.filter(r => r.passed).length;
       toast({
-        title: "Tests completed!",
-        description: "All test cases passed ✓",
+        title: `Tests completed!`,
+        description: `${passedCount}/${results.length} test cases passed ${passedCount === results.length ? '✓' : ''}`,
       });
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Execution Error",
+        description: "Failed to run code. Please try again.",
+        variant: "destructive"
+      });
+      console.error('Code execution error:', error);
+      setTestResults([]);
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   return (
@@ -264,7 +311,12 @@ public:
                     <CardContent className="p-4 pt-0 text-sm">
                       <div className="mb-1"><strong>Input:</strong> {result.input}</div>
                       <div className="mb-1"><strong>Expected:</strong> {result.expected}</div>
-                      <div><strong>Actual:</strong> {result.actual}</div>
+                      <div className="mb-1"><strong>Actual:</strong> {result.actual}</div>
+                      {result.error && (
+                        <div className="mt-2 text-destructive text-xs">
+                          <strong>Error:</strong> {result.error}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
