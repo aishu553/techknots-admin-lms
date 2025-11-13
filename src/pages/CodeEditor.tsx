@@ -4,24 +4,92 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Code2, Play, CheckCircle2, X } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { Code2, Play, CheckCircle2, X, Loader2 } from "lucide-react";
+import Editor from "@monaco-editor/react";
+import { useToast } from "@/hooks/use-toast";
 
 const CodeEditor = () => {
+  const { toast } = useToast();
   const [code, setCode] = useState(`function twoSum(nums, target) {
-  // Your solution here
+  // Write your solution here
+  const map = new Map();
   
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    
+    if (map.has(complement)) {
+      return [map.get(complement), i];
+    }
+    
+    map.set(nums[i], i);
+  }
+  
+  return [];
 }`);
   const [language, setLanguage] = useState("javascript");
   const [testResults, setTestResults] = useState<any[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+
+  const languageMap: Record<string, string> = {
+    javascript: "javascript",
+    python: "python",
+    java: "java",
+    cpp: "cpp",
+  };
+
+  const getStarterCode = (lang: string) => {
+    const starters: Record<string, string> = {
+      javascript: `function twoSum(nums, target) {
+  // Write your solution here
+  
+}`,
+      python: `def two_sum(nums, target):
+    # Write your solution here
+    pass`,
+      java: `class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        // Write your solution here
+        
+    }
+}`,
+      cpp: `class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        // Write your solution here
+        
+    }
+};`,
+    };
+    return starters[lang] || starters.javascript;
+  };
+
+  const handleLanguageChange = (newLang: string) => {
+    setLanguage(newLang);
+    setCode(getStarterCode(newLang));
+  };
 
   const handleRunCode = () => {
-    // Simulate test results
-    setTestResults([
-      { input: "[2,7,11,15], target = 9", expected: "[0,1]", actual: "[0,1]", passed: true },
-      { input: "[3,2,4], target = 6", expected: "[1,2]", actual: "[1,2]", passed: true },
-      { input: "[3,3], target = 6", expected: "[0,1]", actual: "null", passed: false },
-    ]);
+    setIsRunning(true);
+    
+    toast({
+      title: "Running tests...",
+      description: "Executing your code against test cases",
+    });
+
+    // Simulate test execution
+    setTimeout(() => {
+      setTestResults([
+        { input: "[2,7,11,15], target = 9", expected: "[0,1]", actual: "[0,1]", passed: true },
+        { input: "[3,2,4], target = 6", expected: "[1,2]", actual: "[1,2]", passed: true },
+        { input: "[3,3], target = 6", expected: "[0,1]", actual: "[0,1]", passed: true },
+      ]);
+      setIsRunning(false);
+      
+      toast({
+        title: "Tests completed!",
+        description: "All test cases passed ✓",
+      });
+    }, 1500);
   };
 
   return (
@@ -34,7 +102,7 @@ const CodeEditor = () => {
             <span className="text-2xl font-bold text-primary">TechKnots</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Select value={language} onValueChange={setLanguage}>
+            <Select value={language} onValueChange={handleLanguageChange}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Language" />
               </SelectTrigger>
@@ -45,9 +113,18 @@ const CodeEditor = () => {
                 <SelectItem value="cpp">C++</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleRunCode} className="gap-2">
-              <Play className="h-4 w-4" />
-              Run Code
+            <Button onClick={handleRunCode} className="gap-2" disabled={isRunning}>
+              {isRunning ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Running...
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4" />
+                  Run Code
+                </>
+              )}
             </Button>
             <Button variant="outline">Submit</Button>
           </div>
@@ -129,12 +206,36 @@ const CodeEditor = () => {
 
         {/* Code Editor */}
         <div className="w-1/2 flex flex-col">
-          <div className="flex-1 p-4">
-            <Textarea
+          <div className="flex-1 border-b border-border">
+            <Editor
+              height="100%"
+              language={languageMap[language]}
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="h-full font-mono text-sm resize-none"
-              placeholder="Write your code here..."
+              onChange={(value) => setCode(value || "")}
+              theme="vs-dark"
+              options={{
+                minimap: { enabled: true },
+                fontSize: 14,
+                lineNumbers: "on",
+                roundedSelection: true,
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                tabSize: 2,
+                wordWrap: "on",
+                formatOnPaste: true,
+                formatOnType: true,
+                suggestOnTriggerCharacters: true,
+                acceptSuggestionOnEnter: "on",
+                quickSuggestions: true,
+                parameterHints: {
+                  enabled: true,
+                },
+              }}
+              loading={
+                <div className="flex items-center justify-center h-full bg-[#1e1e1e]">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              }
             />
           </div>
 
