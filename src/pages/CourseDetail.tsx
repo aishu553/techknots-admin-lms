@@ -25,6 +25,7 @@ import VideoPlayer from "@/components/VideoPlayer";
 import { DiscussionForum } from "@/components/DiscussionForum";
 import { DownloadableResources } from "@/components/DownloadableResources";
 import { CourseNotes } from "@/components/CourseNotes";
+import { CertificateGenerator } from "@/components/CertificateGenerator";
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -403,11 +404,17 @@ const CourseDetail = () => {
             )}
 
             <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-8 lg:w-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
+            {course.progress === 100 && (
+              <TabsTrigger value="certificate" className="relative">
+                Certificate
+                <Award className="h-3 w-3 ml-1 text-warning" />
+              </TabsTrigger>
+            )}
             <TabsTrigger value="instructor">Instructor</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
             <TabsTrigger value="discussions">Discussions</TabsTrigger>
@@ -536,6 +543,17 @@ const CourseDetail = () => {
           <TabsContent value="resources">
             <DownloadableResources courseId={id || "1"} />
           </TabsContent>
+
+          {course.progress === 100 && (
+            <TabsContent value="certificate">
+              <CertificateGenerator
+                courseTitle={course.title}
+                courseId={course.id.toString()}
+                completionDate={new Date()}
+              />
+            </TabsContent>
+          )}
+
 
           <TabsContent value="instructor">
             <Card>
