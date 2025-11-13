@@ -25,6 +25,12 @@ const Dashboard = () => {
             <Link to="/leaderboard">
               <Button variant="ghost">Leaderboard</Button>
             </Link>
+            <Link to="/achievements">
+              <Button variant="ghost">
+                <Trophy className="h-4 w-4 mr-2" />
+                Achievements
+              </Button>
+            </Link>
             <Button variant="outline">Profile</Button>
           </div>
         </div>
