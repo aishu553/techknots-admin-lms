@@ -4,8 +4,97 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Code2, BookOpen, Trophy, Video, CheckCircle2, Clock } from "lucide-react";
 import DailyChallenge from "@/components/DailyChallenge";
+import { CourseRecommendations } from "@/components/CourseRecommendations";
+import { generateRecommendations, getUserLearningPattern, Course } from "@/lib/recommendationEngine";
 
 const Dashboard = () => {
+  // Mock user's course data
+  const userCourses: Course[] = [
+    {
+      id: 1,
+      title: "Complete JavaScript Masterclass",
+      category: "Web Development",
+      level: "Beginner",
+      tags: ["JavaScript", "Frontend", "ES6"],
+      rating: 4.8,
+      students: 15420,
+      isEnrolled: true,
+      progress: 100,
+    },
+    {
+      id: 2,
+      title: "Python Data Structures & Algorithms",
+      category: "Programming",
+      level: "Intermediate",
+      tags: ["Python", "Algorithms", "Data Structures"],
+      rating: 4.9,
+      students: 12350,
+      isEnrolled: true,
+      progress: 40,
+    },
+  ];
+
+  const allAvailableCourses: Course[] = [
+    ...userCourses,
+    {
+      id: 3,
+      title: "Advanced React Patterns",
+      category: "Web Development",
+      level: "Advanced",
+      tags: ["React", "JavaScript", "Frontend"],
+      rating: 4.7,
+      students: 8920,
+    },
+    {
+      id: 4,
+      title: "Node.js Backend Development",
+      category: "Web Development",
+      level: "Intermediate",
+      tags: ["Node.js", "Backend", "JavaScript"],
+      rating: 4.8,
+      students: 11230,
+    },
+    {
+      id: 5,
+      title: "TypeScript Fundamentals",
+      category: "Web Development",
+      level: "Intermediate",
+      tags: ["TypeScript", "JavaScript", "Frontend"],
+      rating: 4.9,
+      students: 9500,
+    },
+    {
+      id: 6,
+      title: "Machine Learning with Python",
+      category: "AI/ML",
+      level: "Advanced",
+      tags: ["Python", "Machine Learning", "AI"],
+      rating: 4.8,
+      students: 9850,
+    },
+    {
+      id: 7,
+      title: "Advanced Python Programming",
+      category: "Programming",
+      level: "Advanced",
+      tags: ["Python", "Advanced", "OOP"],
+      rating: 4.7,
+      students: 8200,
+    },
+    {
+      id: 8,
+      title: "Full Stack JavaScript",
+      category: "Web Development",
+      level: "Advanced",
+      tags: ["JavaScript", "Full Stack", "MERN"],
+      rating: 4.9,
+      students: 12100,
+    },
+  ];
+
+  const userPattern = getUserLearningPattern(userCourses);
+  const recommendations = generateRecommendations(allAvailableCourses, userPattern, 6);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -149,6 +238,14 @@ const Dashboard = () => {
               tags={["DP", "Algorithm"]}
             />
           </div>
+        </section>
+
+        {/* Personalized Recommendations */}
+        <section className="mb-8">
+          <CourseRecommendations 
+            recommendations={recommendations}
+            reason="Based on your completed JavaScript course and current Python progress"
+          />
         </section>
       </div>
     </div>
