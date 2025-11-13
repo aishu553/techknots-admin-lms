@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import VideoPlayer from "@/components/VideoPlayer";
 import { DiscussionForum } from "@/components/DiscussionForum";
 import { DownloadableResources } from "@/components/DownloadableResources";
+import { CourseNotes } from "@/components/CourseNotes";
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -33,6 +34,8 @@ const CourseDetail = () => {
     sectionIndex: number;
     lessonIndex: number;
   } | null>(null);
+  const [currentVideoTime, setCurrentVideoTime] = useState(0);
+  const [seekToTime, setSeekToTime] = useState<number | undefined>(undefined);
 
   const courseData: Record<string, any> = {
     "1": {
@@ -393,14 +396,17 @@ const CourseDetail = () => {
                       setActiveLesson(nextLesson);
                     }
                   }}
+                  onTimeUpdate={setCurrentVideoTime}
+                  seekToTime={seekToTime}
                 />
               </div>
             )}
 
             <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
             <TabsTrigger value="instructor">Instructor</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
@@ -511,6 +517,20 @@ const CourseDetail = () => {
                 </Accordion>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="notes">
+            <CourseNotes 
+              courseId={id || "1"}
+              currentLessonId={activeLesson ? `${activeLesson.sectionIndex}-${activeLesson.lessonIndex}` : undefined}
+              currentLessonTitle={activeLesson?.title}
+              currentVideoTime={currentVideoTime}
+              onSeekToTimestamp={(timestamp) => {
+                setSeekToTime(timestamp);
+                setTimeout(() => setSeekToTime(undefined), 100);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="resources">

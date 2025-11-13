@@ -22,6 +22,8 @@ interface VideoPlayerProps {
   courseId: string;
   onProgress?: (progress: number) => void;
   onComplete?: () => void;
+  onTimeUpdate?: (currentTime: number) => void;
+  seekToTime?: number;
 }
 
 const VideoPlayer = ({
@@ -30,6 +32,8 @@ const VideoPlayer = ({
   courseId,
   onProgress,
   onComplete,
+  onTimeUpdate,
+  seekToTime,
 }: VideoPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -52,7 +56,7 @@ const VideoPlayer = ({
     }
   }, [courseId, lessonId]);
 
-  // Save progress periodically
+  // Save progress periodically and report time updates
   useEffect(() => {
     if (isPlaying) {
       progressIntervalRef.current = setInterval(() => {
@@ -71,6 +75,9 @@ const VideoPlayer = ({
           const progress = (newTime / duration) * 100;
           onProgress?.(progress);
           
+          // Report current time for notes
+          onTimeUpdate?.(newTime);
+          
           return newTime;
         });
       }, 1000);
@@ -81,7 +88,14 @@ const VideoPlayer = ({
         clearInterval(progressIntervalRef.current);
       }
     };
-  }, [isPlaying, duration, courseId, lessonId, onProgress, onComplete]);
+  }, [isPlaying, duration, courseId, lessonId, onProgress, onComplete, onTimeUpdate]);
+
+  // Handle external seek requests
+  useEffect(() => {
+    if (seekToTime !== undefined && seekToTime !== currentTime) {
+      setCurrentTime(seekToTime);
+    }
+  }, [seekToTime]);
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
