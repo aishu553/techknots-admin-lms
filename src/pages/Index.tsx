@@ -1,28 +1,17 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Code2, BookOpen, Trophy, Video, Users, Zap } from "lucide-react";
+import { BookOpen, Code2, Trophy, Video, Users, Zap } from "lucide-react";
 import heroImage from "@/assets/hero-bg.jpg";
+import SiteNav from "@/components/SiteNav";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
+  const { user, role } = useAuth();
+  const dashboardPath = role ? `/${role}-dashboard` : "/login";
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Code2 className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">TechKnots</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link to="/signup">
-              <Button>Get Started</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-hero py-20 md:py-32">
@@ -40,9 +29,9 @@ const Index = () => {
               live sessions with expert instructors. Your complete learning platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/signup">
+              <Link to={user && role ? dashboardPath : "/signup"}>
                 <Button size="lg" className="w-full sm:w-auto">
-                  Start Learning Free
+                  {user && role ? "Continue to Dashboard" : "Start Learning Free"}
                 </Button>
               </Link>
               <Link to="/courses">

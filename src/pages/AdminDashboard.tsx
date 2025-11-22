@@ -1,35 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Code2, Users, BookOpen, TrendingUp, Settings, LogOut, Home } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const { user, role, loading, signOutUser } = useAuth();
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (!userData) {
+    if (loading) return;
+    if (!user) {
       navigate("/login");
       return;
     }
-    const parsed = JSON.parse(userData);
-    if (parsed.role !== "admin") {
-      navigate(`/${parsed.role}-dashboard`);
-      return;
+    if (role && role !== "admin") {
+      navigate(`/${role}-dashboard`);
     }
-    setUser(parsed);
-  }, [navigate]);
+  }, [loading, navigate, role, user]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
+    await signOutUser();
     navigate("/");
   };
 
-  if (!user) return null;
+  if (loading || !user || role !== "admin") return null;
 
   return (
     <div className="min-h-screen bg-gradient-hero">

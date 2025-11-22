@@ -1,35 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Code2, BookOpen, Trophy, Target, LogOut, Home } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const { user, role, loading, signOutUser } = useAuth();
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (!userData) {
+    if (loading) return;
+    if (!user) {
       navigate("/login");
       return;
     }
-    const parsed = JSON.parse(userData);
-    if (parsed.role !== "student") {
-      navigate(`/${parsed.role}-dashboard`);
-      return;
+    if (role && role !== "student") {
+      navigate(`/${role}-dashboard`);
     }
-    setUser(parsed);
-  }, [navigate]);
+  }, [loading, navigate, role, user]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
+    await signOutUser();
     navigate("/");
   };
 
-  if (!user) return null;
+  if (loading || !user || role !== "student") return null;
 
   return (
     <div className="min-h-screen bg-gradient-hero">
