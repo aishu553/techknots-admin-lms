@@ -1,5 +1,10 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import {
+  getFirestore,
+  type Firestore,
+  serverTimestamp as _serverTimestamp,
+} from "firebase/firestore";
 
 type FirebaseConfig = {
   apiKey: string;
@@ -33,6 +38,7 @@ const assertConfig = (): FirebaseConfig => {
 
 let firebaseApp: FirebaseApp | null = null;
 let firebaseAuth: Auth | null = null;
+let firebaseDb: Firestore | null = null;
 
 export const getFirebaseApp = () => {
   if (firebaseApp) {
@@ -55,4 +61,14 @@ export const getFirebaseAuth = () => {
 };
 
 export type OAuthProvider = "google" | "github";
+
+export const getFirebaseDb = (): Firestore => {
+  if (firebaseDb) return firebaseDb;
+  const app = getFirebaseApp();
+  firebaseDb = getFirestore(app);
+  return firebaseDb;
+};
+
+// Helper to use Firestore serverTimestamp without importing firestore in other modules
+export const serverTimestamp = _serverTimestamp;
 

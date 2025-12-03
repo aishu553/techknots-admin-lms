@@ -10,6 +10,8 @@ import { Code2, Github, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getFirebaseAuth, type OAuthProvider } from "@/lib/firebaseClient";
 import { getRoleForEmail, setRoleForEmail, type Role } from "@/lib/roleStorage";
+import { verifyAndCreateMentorRequest } from "@/lib/mentorClient";
+import { createUserDoc } from "@/lib/userClient";
 import {
   GithubAuthProvider,
   GoogleAuthProvider,
@@ -28,12 +30,14 @@ const Signup = () => {
     password: string;
     confirmPassword: string;
     role: Role;
+    mentorCode?: string;
   }>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
     role: "student",
+    mentorCode: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null);
@@ -113,6 +117,41 @@ const Signup = () => {
 
       const credentials = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       await updateProfile(credentials.user, { displayName: formData.name }).catch(() => undefined);
+
+      // If the user selected Mentor, validate the mentor code and create a mentor request
+      if (formData.role === "mentor") {
+        if (!formData.mentorCode) {
+          toast({ title: "Mentor code required", description: "Please enter a mentor code.", variant: "destructive" });
+          setIsSubmitting(false);
+          return;
+        }
+
+        const verify = await verifyAndCreateMentorRequest(formData.mentorCode, {
+          uid: credentials.user.uid,
+          email: credentials.user.email || undefined,
+          name: formData.name,
+        });
+
+        if (!verify.success) {
+          toast({ title: "Invalid mentor code", description: verify.message ?? "Unable to verify code.", variant: "destructive" });
+          // Fallback: treat account as a student if code verification fails
+          await createUserDoc({ uid: credentials.user.uid, email: credentials.user.email || undefined, name: formData.name, role: "student" }).catch(() => undefined);
+          setRoleForEmail(credentials.user.email, "student");
+          routeByRole(credentials.user.email, "student");
+          return;
+        }
+
+        // success: create user doc as mentor and finish
+        await createUserDoc({ uid: credentials.user.uid, email: credentials.user.email || undefined, name: formData.name, role: "mentor" }).catch(() => undefined);
+        setRoleForEmail(credentials.user.email, "mentor");
+        toast({ title: "Mentor request submitted" });
+        routeByRole(credentials.user.email, "mentor");
+        return;
+      }
+
+      // non-mentor flows
+      // write a user doc for non-mentor signups
+      await createUserDoc({ uid: credentials.user.uid, email: credentials.user.email || undefined, name: formData.name, role: formData.role }).catch(() => undefined);
       setRoleForEmail(credentials.user.email, formData.role);
       toast({ title: "Account created successfully!" });
       routeByRole(credentials.user.email, formData.role);
@@ -176,6 +215,11 @@ const Signup = () => {
 
       if (!existingRole) {
         setRoleForEmail(email, formData.role);
+      }
+
+      // If this is a new OAuth-created user, create a users doc so admins can see them
+      if (additionalInfo?.isNewUser) {
+        await createUserDoc({ uid: result.user.uid, email, name: result.user.displayName || undefined, role: formData.role }).catch(() => undefined);
       }
 
       toast({ title: `Signed up with ${provider}` });
@@ -280,6 +324,19 @@ const Signup = () => {
                 </SelectContent>
               </Select>
             </div>
+            {formData.role === "mentor" && (
+              <div className="space-y-2">
+                <Label htmlFor="mentorCode">Mentor Code</Label>
+                <Input
+                  id="mentorCode"
+                  type="text"
+                  placeholder="Enter mentor invitation code"
+                  value={formData.mentorCode}
+                  onChange={(e) => handleChange("mentorCode", e.target.value)}
+                  required
+                />
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Account
